@@ -166,21 +166,21 @@ class MainView extends WatchUi.View {
         var routeText = (route == null) ? "resolving..."
                       : (route.length() == 0 ? "route n/a" : route);
         dc.setColor(PLANE_COLOR, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - (ring * 0.06).toNumber(), Graphics.FONT_SMALL,
+        dc.drawText(cx, cy - (ring * 0.04).toNumber(), Graphics.FONT_SMALL,
                     fitText(dc, routeText, Graphics.FONT_SMALL, maxW),
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         // altitude
         var altText = (f.altM >= 0) ? (f.altM.toString() + " m") : "alt ?";
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + (ring * 0.10).toNumber(), Graphics.FONT_SMALL, altText,
+        dc.drawText(cx, cy + (ring * 0.15).toNumber(), Graphics.FONT_SMALL, altText,
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         // type
         var typeText = (type == null) ? "" : (type.length() == 0 ? "type n/a" : type);
         if (typeText.length() > 0) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, cy + (ring * 0.26).toNumber(), Graphics.FONT_XTINY,
+            dc.drawText(cx, cy + (ring * 0.34).toNumber(), Graphics.FONT_XTINY,
                         fitText(dc, typeText, Graphics.FONT_XTINY, maxW),
                         Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
@@ -191,7 +191,7 @@ class MainView extends WatchUi.View {
         if (line.length() > 0) { line += "  "; }
         line += GeoUtils.formatDistance(f.distance);
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + (ring * 0.38).toNumber(), Graphics.FONT_XTINY,
+        dc.drawText(cx, cy + (ring * 0.50).toNumber(), Graphics.FONT_XTINY,
                     fitText(dc, line, Graphics.FONT_XTINY, maxW),
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
