@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<strings>
+    <string id="AppName">Planes Above Me</string>
+    <string id="Subtitle">What plane is that?</string>
+
+    <string id="WaitGps">Waiting for GPS...</string>
+    <string id="Loading">Scanning the sky...</string>
+    <string id="NoPlanes">No aircraft nearby</string>
+
+    <string id="MenuNearby">Aircraft nearby</string>
+
+    <string id="SetRadius">Search radius (m)</string>
+    <string id="SetRefresh">Refresh interval (s)</string>
+</strings>

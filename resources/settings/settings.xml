@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+    <setting propertyKey="@Properties.radiusMeters" title="@Strings.SetRadius">
+        <settingConfig type="numeric" min="1000" max="20000"/>
+    </setting>
+    <setting propertyKey="@Properties.refreshSec" title="@Strings.SetRefresh">
+        <settingConfig type="numeric" min="15" max="120"/>
+    </setting>
+</settings>
