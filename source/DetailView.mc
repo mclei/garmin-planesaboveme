@@ -104,6 +104,35 @@ class DetailView extends WatchUi.View {
             dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(w - 4, pos, 3, barH);
         }
+
+        // Fixed lock badge (top-right), drawn over the scrolling content so the
+        // lock state is visible immediately when START toggles it.
+        drawLockBadge(dc, w);
+    }
+
+    // Always-visible badge showing whether this aircraft is the locked target.
+    private function drawLockBadge(dc as Dc, w as Number) as Void {
+        var locked = (_model.targetPlane == _plane);
+        var txt = locked ? "LOCKED" : "UNLOCKED";
+        var font = Graphics.FONT_XTINY;
+        var tw = dc.getTextWidthInPixels(txt, font);
+        var fh = dc.getFontHeight(font);
+        var bw = tw + 12;
+        var bh = fh + 4;
+        var bx = w - bw - 8;
+        var by = 4;
+        // Mask the content underneath so the badge stays legible.
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.fillRectangle(bx - 2, by - 2, bw + 4, bh + 4);
+        if (locked) {
+            dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+            dc.fillRoundedRectangle(bx, by, bw, bh, 4);
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        } else {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawRoundedRectangle(bx, by, bw, bh, 4);
+        }
+        dc.drawText(bx + 6, by + 2, font, txt, Graphics.TEXT_JUSTIFY_LEFT);
     }
 
     private function buildBlocks() as Array {
