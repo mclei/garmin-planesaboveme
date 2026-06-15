@@ -23,14 +23,14 @@ R_BEZEL = 28.5                 # bezel inner edge (face radius)
 # --- colours (r, g, b) -------------------------------------------------------
 BEZEL_OUT = (38, 64, 104)      # steel bezel, lit outer
 BEZEL_IN = (16, 32, 60)        # steel bezel, shaded inner
-FACE_CTR = (196, 228, 255)     # sky face, bright centre
-FACE_EDGE = (44, 120, 208)     # sky face, deeper toward rim
-TICK = (214, 228, 248)         # minor/major ticks
-NORTH = (228, 64, 60)          # red north marker
-BODY_TOP = (252, 253, 255)     # plane upper surface
-BODY_BOT = (198, 216, 238)     # plane lower surface (cool shadow)
-WINDOW = (54, 90, 134)         # cockpit glass
-SHADOW = (8, 26, 56)           # drop shadow tint
+FACE_CTR = (132, 188, 240)     # sky face, centre (deeper, for plane contrast)
+FACE_EDGE = (32, 100, 188)     # sky face, deeper toward rim
+TICK = (224, 236, 252)         # minor/major ticks
+NORTH = (232, 56, 52)          # red north marker
+BODY_TOP = (255, 255, 255)     # plane upper surface
+BODY_BOT = (216, 230, 246)     # plane lower surface (cool shadow)
+WINDOW = (28, 54, 92)          # cockpit glass
+OUTLINE = (10, 26, 54)         # dark outline around the airframe
 
 
 def lerp(a, b, t):
@@ -99,6 +99,15 @@ def in_plane_any(x, y):
     return plane_bits(x, y)[0]
 
 
+def near_plane(x, y, d):
+    """True if any of 8 neighbours at distance d is inside the plane."""
+    for ox, oy in ((d, 0), (-d, 0), (0, d), (0, -d),
+                   (d, d), (d, -d), (-d, d), (-d, -d)):
+        if in_plane_any(x + ox, y + oy):
+            return True
+    return False
+
+
 def tick_color(dx, dy, dist):
     """Return (color, coverage) for compass ticks on the bezel, else None.
 
@@ -150,12 +159,13 @@ def sample(x, y):
     if point_in_poly(x, y, [(35, 17), (31.5, 6.5), (38.5, 6.5)]):
         px = over(px, NORTH, 1.0)
 
-    # Soft drop shadow under the plane.
-    if dist < R_BEZEL and in_plane_any(x - 1.4, y - 1.6):
-        px = over(px, SHADOW, 0.26)
+    # Dark outline around the airframe so the white plane stays recognisable
+    # against the bright compass face.
+    is_plane, kind = plane_bits(x, y)
+    if not is_plane and dist < R_BEZEL and near_plane(x, y, 1.7):
+        px = over(px, OUTLINE, 1.0)
 
     # The plane (needle).
-    is_plane, kind = plane_bits(x, y)
     if is_plane:
         if kind == "fin":
             px = over(px, NORTH, 1.0)
