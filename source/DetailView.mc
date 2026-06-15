@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.System;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
@@ -68,22 +69,31 @@ class DetailView extends WatchUi.View {
         dc.clear();
         var w = dc.getWidth();
         var h = dc.getHeight();
-        var margin = (w * 0.08).toNumber();
+        // Round screens clip the corners, so inset the text and centre it, and
+        // keep the chrome away from the edges.
+        var round = (System.getDeviceSettings().screenShape
+                     != System.SCREEN_SHAPE_RECTANGLE);
+        var margin = round ? (w * 0.17).toNumber() : (w * 0.08).toNumber();
+        var topInset = round ? (h * 0.20).toNumber() : 10;
+        var botInset = round ? (h * 0.16).toNumber() : 10;
         var maxW = w - 2 * margin;
+        var textX = round ? (w / 2) : margin;
+        var justify = round ? Graphics.TEXT_JUSTIFY_CENTER
+                            : Graphics.TEXT_JUSTIFY_LEFT;
 
         var blocks = buildBlocks();
 
-        var total = 8;
+        var total = topInset;
         for (var i = 0; i < blocks.size(); i++) {
             var fh = dc.getFontHeight(blocks[i][1]);
             total += wrapText(dc, blocks[i][0], blocks[i][1], maxW).size() * fh + 2;
         }
-        total += 8;
+        total += botInset;
         _maxScroll = total - h;
         if (_maxScroll < 0) { _maxScroll = 0; }
         if (_scroll > _maxScroll) { _scroll = _maxScroll; }
 
-        var y = 8 - _scroll;
+        var y = topInset - _scroll;
         for (var i = 0; i < blocks.size(); i++) {
             var font = blocks[i][1];
             var fh = dc.getFontHeight(font);
@@ -91,7 +101,7 @@ class DetailView extends WatchUi.View {
             for (var j = 0; j < lines.size(); j++) {
                 if (y + fh > 0 && y < h) {
                     dc.setColor(blocks[i][2], Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(margin, y, font, lines[j], Graphics.TEXT_JUSTIFY_LEFT);
+                    dc.drawText(textX, y, font, lines[j], justify);
                 }
                 y += fh + 2;
             }
@@ -101,17 +111,21 @@ class DetailView extends WatchUi.View {
             var barH = (h * h) / total;
             if (barH < 16) { barH = 16; }
             var pos = ((h - barH) * _scroll) / _maxScroll;
+            var barX = round ? (w - 7) : (w - 4);
             dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(w - 4, pos, 3, barH);
+            dc.fillRectangle(barX, pos, 3, barH);
         }
 
-        // Fixed lock badge (top-right), drawn over the scrolling content so the
-        // lock state is visible immediately when START toggles it.
-        drawLockBadge(dc, w);
+        // Fixed lock badge, drawn over the scrolling content so the lock state
+        // is visible immediately when START toggles it.
+        drawLockBadge(dc, w, h, round);
     }
 
     // Always-visible badge showing whether this aircraft is the locked target.
-    private function drawLockBadge(dc as Dc, w as Number) as Void {
+    // Top-right on rectangular screens; centred near the top on round ones so
+    // it stays inside the circle.
+    private function drawLockBadge(dc as Dc, w as Number, h as Number,
+                                   round as Boolean) as Void {
         var locked = (_model.targetPlane == _plane);
         var txt = locked ? "LOCKED" : "UNLOCKED";
         var font = Graphics.FONT_XTINY;
@@ -119,8 +133,8 @@ class DetailView extends WatchUi.View {
         var fh = dc.getFontHeight(font);
         var bw = tw + 12;
         var bh = fh + 4;
-        var bx = w - bw - 8;
-        var by = 4;
+        var bx = round ? ((w - bw) / 2) : (w - bw - 8);
+        var by = round ? (h * 0.07).toNumber() : 4;
         // Mask the content underneath so the badge stays legible.
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.fillRectangle(bx - 2, by - 2, bw + 4, bh + 4);

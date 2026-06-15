@@ -40,16 +40,21 @@ jobs:
               -in developer_key.pem -out developer_key.der
           fi
 
-      - name: Build (venux1)
+      - name: Build (venux1, square)
         run: |
-          monkeyc -d venux1 -f monkey.jungle -o Planes.prg \
+          monkeyc -d venux1 -f monkey.jungle -o Planes-venux1.prg \
             -y developer_key.der -w
 
-      - name: Upload sideloadable app
+      - name: Build (fenix7, round)
+        run: |
+          monkeyc -d fenix7 -f monkey.jungle -o Planes-fenix7.prg \
+            -y developer_key.der -w
+
+      - name: Upload sideloadable apps
         uses: actions/upload-artifact@v4
         with:
-          name: PlanesAboveMe-venux1
-          path: Planes.prg
+          name: PlanesAboveMe-prg
+          path: Planes-*.prg
           if-no-files-found: error
 
       - name: Export store package

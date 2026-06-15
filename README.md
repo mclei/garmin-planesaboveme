@@ -11,8 +11,12 @@ It finds anything broadcasting ADS-B overhead — **airliners and small
 airplanes, helicopters, business jets, cargo and military flights** — referred
 to collectively here as *aircraft*.
 
-Built for the **Garmin Venu X1** (square display); works on any modern Connect
-IQ device added to the manifest.
+Runs on modern Connect IQ watches with a colour display — **round and
+square** alike (Venu X1 / 2 / 3, vívoactive 5, fēnix 7 / epix 2, Forerunner
+255 / 265 / 955 / 965 and more). The layout adapts to the screen shape. The
+"what you're facing" feature needs a compass (magnetometer); on watches
+without one the radar still shows every aircraft's bearing and distance, just
+not rotated to your facing direction.
 
 ## Features
 
