@@ -14,6 +14,12 @@ const ADSBDB_CALLSIGN_URL = "https://api.adsbdb.com/v0/callsign/";
 
 const MAX_PLANES = 30;
 
+// Compass smoothing: ignore heading jitter smaller than the deadband, and ease
+// toward larger (real) changes so the display doesn't twitch with magnetometer
+// noise.
+const HEADING_DEADBAND = 2.0;  // degrees
+const HEADING_SMOOTH = 0.5;    // 0..1 fraction moved toward a new reading
+
 class PlaneModel {
 
     public var lat as Double?;
@@ -21,6 +27,7 @@ class PlaneModel {
     public var gpsQuality as Number;
     public var posApprox as Boolean;
     public var headingDeg as Float;
+    private var _haveHeading as Boolean;
 
     public var planes as Array<Plane>;   // distance-sorted, full 360 deg
     public var targetPlane as Plane?;    // user-locked aircraft
@@ -50,6 +57,7 @@ class PlaneModel {
         gpsQuality = 0;
         posApprox = false;
         headingDeg = 0.0;
+        _haveHeading = false;
         planes = [] as Array<Plane>;
         targetPlane = null;
         status = STATUS_IDLE;
@@ -125,7 +133,16 @@ class PlaneModel {
     function tick() as Void {
         var si = Sensor.getInfo();
         if (si != null && si.heading != null) {
-            headingDeg = GeoUtils.normDeg(Math.toDegrees(si.heading).toFloat());
+            var raw = GeoUtils.normDeg(Math.toDegrees(si.heading).toFloat());
+            if (!_haveHeading) {
+                headingDeg = raw;          // first reading: take it as-is (no startup sweep)
+                _haveHeading = true;
+            } else {
+                var diff = GeoUtils.angleDiff(raw, headingDeg);
+                if (diff > HEADING_DEADBAND || diff < -HEADING_DEADBAND) {
+                    headingDeg = GeoUtils.normDeg(headingDeg + diff * HEADING_SMOOTH);
+                }
+            }
         }
         if (lat == null) { return; }
         var now = Time.now().value();
