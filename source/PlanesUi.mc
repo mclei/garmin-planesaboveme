@@ -21,7 +21,8 @@ module PlanesUi {
             if (p.altM >= 0) { sub += " | " + p.altM.toString() + " m"; }
             menu.addItem(new WatchUi.MenuItem(p.label(), sub, i, null));
         }
-        WatchUi.pushView(menu, new PlaneListDelegate(model, list), WatchUi.SLIDE_LEFT);
+        // Opened by the swipe-up gesture -> slide up from the bottom.
+        WatchUi.pushView(menu, new PlaneListDelegate(model, list), WatchUi.SLIDE_UP);
     }
 
     function pushDetail(model as PlaneModel, plane as Plane) as Void {
@@ -46,5 +47,10 @@ class PlaneListDelegate extends WatchUi.Menu2InputDelegate {
         if (id instanceof Number && id >= 0 && id < _items.size()) {
             PlanesUi.pushDetail(_model, _items[id]);
         }
+    }
+
+    // Reverse of the slide-up it opened with.
+    function onBack() as Void {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 }
