@@ -40,7 +40,7 @@ class DetailView extends WatchUi.View {
         var typeDone = (_plane.icao24.length() == 0)
                      || (_model.aircraftType(_plane.icao24) != null);
         var routeDone = (_plane.callsign.length() == 0)
-                      || (_model.aircraftRoute(_plane.callsign) != null);
+                      || _model.routeSettled(_plane.callsign);
         if (typeDone && routeDone) {
             var t = _timer;
             if (t != null) { t.stop(); _timer = null; }
@@ -150,6 +150,10 @@ class DetailView extends WatchUi.View {
         if (fr != null) {
             addField(b, "From", airportLine(fr["origin"]));
             addField(b, "To", airportLine(fr["destination"]));
+            if (_model.routeIsCorrected(_plane.callsign)) {
+                // adsbdb's pairing looked stale; this route came from hexdb.io.
+                b.add(["H  via hexdb.io", Graphics.FONT_XTINY, Graphics.COLOR_GREEN]);
+            }
         } else if (_plane.callsign.length() == 0) {
             b.add(["No callsign", Graphics.FONT_XTINY, Graphics.COLOR_DK_GRAY]);
         } else if (_model.aircraftRoute(_plane.callsign) == null) {

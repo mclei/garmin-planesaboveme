@@ -165,10 +165,18 @@ class MainView extends WatchUi.View {
         // destination / route
         var routeText = (route == null) ? "resolving..."
                       : (route.length() == 0 ? "route n/a" : route);
+        var shownRoute = fitText(dc, routeText, Graphics.FONT_SMALL, maxW);
+        var routeY = cy - (ring * 0.04).toNumber();
         dc.setColor(PLANE_COLOR, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - (ring * 0.04).toNumber(), Graphics.FONT_SMALL,
-                    fitText(dc, routeText, Graphics.FONT_SMALL, maxW),
+        dc.drawText(cx, routeY, Graphics.FONT_SMALL, shownRoute,
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        // Green "H" marks a route corrected via the hexdb.io fallback.
+        if (_model.routeIsCorrected(f.callsign)) {
+            var rtw = dc.getTextWidthInPixels(shownRoute, Graphics.FONT_SMALL);
+            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx + rtw / 2 + 8, routeY, Graphics.FONT_XTINY, "H",
+                        Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
 
         // altitude
         var altText = (f.altM >= 0) ? (f.altM.toString() + " m") : "alt ?";

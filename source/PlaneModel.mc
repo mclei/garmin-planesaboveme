@@ -11,8 +11,19 @@ const OPENSKY_URL = "https://opensky-network.org/api/states/all";
 // adsbdb.com (free, keyless): type by Mode-S address, route by callsign.
 const ADSBDB_AIRCRAFT_URL = "https://api.adsbdb.com/v0/aircraft/";
 const ADSBDB_CALLSIGN_URL = "https://api.adsbdb.com/v0/callsign/";
+// hexdb.io (free, keyless): used only to correct an adsbdb route that looks
+// stale. Returns the current ICAO pairing ("LKPR-EGPH") plus per-airport detail.
+const HEXDB_ROUTE_URL = "https://hexdb.io/api/v1/route/icao/";
+const HEXDB_AIRPORT_URL = "https://hexdb.io/api/v1/airport/icao/";
 
 const MAX_PLANES = 30;
+
+// A callsign->route mapping (adsbdb) is treated as stale when the aircraft sits
+// well off the direct origin->destination corridor: detour = dist(plane,origin)
+// + dist(plane,dest) - dist(origin,dest). Stale if detour exceeds the larger of
+// a fixed floor and a fraction of the direct distance.
+const ROUTE_STALE_DETOUR_M = 200000.0;  // 200 km floor
+const ROUTE_STALE_FRACTION = 0.5;
 
 // Compass smoothing: ignore heading jitter smaller than the deadband, and ease
 // toward larger (real) changes so the display doesn't twitch with magnetometer
@@ -51,6 +62,15 @@ class PlaneModel {
     private var _metaTypeKey as String?;
     private var _metaRouteKey as String?;
 
+    // hexdb stale-route fallback state
+    private var _routeStaleChecked as Dictionary;  // callsign -> Bool (decided)
+    private var _routeCorrected as Dictionary;     // callsign -> Bool (via hexdb)
+    private var _hexKey as String?;                // callsign being corrected
+    private var _hexOrigIcao as String?;
+    private var _hexDestIcao as String?;
+    private var _hexOrigAp as Dictionary?;
+    private var _hexDestAp as Dictionary?;
+
     function initialize() {
         lat = null;
         lon = null;
@@ -74,6 +94,13 @@ class PlaneModel {
         _lastMetaSec = 0;
         _metaTypeKey = null;
         _metaRouteKey = null;
+        _routeStaleChecked = {} as Dictionary;
+        _routeCorrected = {} as Dictionary;
+        _hexKey = null;
+        _hexOrigIcao = null;
+        _hexDestIcao = null;
+        _hexOrigAp = null;
+        _hexDestAp = null;
         reloadSettings();
     }
 
@@ -284,6 +311,24 @@ class PlaneModel {
         return _route.get(callsign);
     }
 
+    // True when this callsign's route was replaced by the hexdb.io fallback
+    // because adsbdb's pairing looked stale. Drives the on-screen indicator.
+    function routeIsCorrected(callsign as String) as Boolean {
+        if (callsign.length() == 0) { return false; }
+        return _routeCorrected.get(callsign) != null;
+    }
+
+    // True once the route is fully resolved, including the staleness check and
+    // any hexdb correction. The detail page polls this so it keeps ticking until
+    // a corrected route has landed.
+    function routeSettled(callsign as String) as Boolean {
+        if (callsign.length() == 0) { return true; }
+        if (_route.get(callsign) == null) { return false; }      // adsbdb pending
+        if (_routeStaleChecked.get(callsign) == null) { return false; }
+        if (_hexKey != null && _hexKey.equals(callsign)) { return false; }
+        return true;
+    }
+
     function aircraftInfo(icao24 as String) as Dictionary? {
         var v = _typeInfo.get(icao24);
         return (v instanceof Dictionary) ? v : null;
@@ -319,7 +364,71 @@ class PlaneModel {
             _metaRouteKey = f.callsign;
             Communications.makeWebRequest(ADSBDB_CALLSIGN_URL + f.callsign, {},
                                           metaOptions(), method(:onRouteResponse));
+            return;
         }
+        // adsbdb route is present: verify it isn't a stale callsign pairing and,
+        // if it is, replace it with hexdb.io's current route.
+        resolveStaleRoute(f, now);
+    }
+
+    // Drives the hexdb fallback one request per call (serialised via the same
+    // _metaPending gate as the adsbdb lookups). Only kicks in when adsbdb's
+    // route puts the aircraft well off the corridor between its airports.
+    private function resolveStaleRoute(f as Plane, now as Number) as Void {
+        var cs = f.callsign;
+        if (cs.length() == 0) { return; }
+        if (_hexKey != null) {
+            if (!_hexKey.equals(cs)) { return; }   // busy correcting another flight
+            if (_hexOrigIcao != null && _hexOrigAp == null) {
+                _metaPending = true;
+                _lastMetaSec = now;
+                Communications.makeWebRequest(HEXDB_AIRPORT_URL + _hexOrigIcao, {},
+                                              metaOptions(), method(:onHexOriginResponse));
+                return;
+            }
+            if (_hexDestIcao != null && _hexDestAp == null) {
+                _metaPending = true;
+                _lastMetaSec = now;
+                Communications.makeWebRequest(HEXDB_AIRPORT_URL + _hexDestIcao, {},
+                                              metaOptions(), method(:onHexDestResponse));
+            }
+            return;
+        }
+        if (_routeStaleChecked.get(cs) != null) { return; }  // decided already
+        _routeStaleChecked.put(cs, true);
+        var fr = _routeInfo.get(cs);
+        if (!(fr instanceof Dictionary) || !isRouteStale(f, fr)) { return; }
+        // Stale -> look up the current route from hexdb.io.
+        _hexKey = cs;
+        _hexOrigIcao = null;
+        _hexDestIcao = null;
+        _hexOrigAp = null;
+        _hexDestAp = null;
+        _metaPending = true;
+        _lastMetaSec = now;
+        Communications.makeWebRequest(HEXDB_ROUTE_URL + cs, {},
+                                      metaOptions(), method(:onHexRouteResponse));
+    }
+
+    // True when the aircraft is too far off the direct origin->dest corridor for
+    // the adsbdb route to plausibly be this flight's actual route.
+    private function isRouteStale(f as Plane, fr as Dictionary) as Boolean {
+        var o = fr["origin"];
+        var d = fr["destination"];
+        if (!(o instanceof Dictionary) || !(d instanceof Dictionary)) { return false; }
+        var olat = numToD(o["latitude"]);
+        var olon = numToD(o["longitude"]);
+        var dlat = numToD(d["latitude"]);
+        var dlon = numToD(d["longitude"]);
+        if (olat == null || olon == null || dlat == null || dlon == null) {
+            return false;
+        }
+        var dpo = GeoUtils.distanceM(f.lat, f.lon, olat, olon);
+        var dpd = GeoUtils.distanceM(f.lat, f.lon, dlat, dlon);
+        var dod = GeoUtils.distanceM(olat, olon, dlat, dlon);
+        var tol = ROUTE_STALE_DETOUR_M;
+        if (dod * ROUTE_STALE_FRACTION > tol) { tol = dod * ROUTE_STALE_FRACTION; }
+        return (dpo + dpd - dod) > tol;
     }
 
     private function metaOptions() as Dictionary {
@@ -404,6 +513,97 @@ class PlaneModel {
             if (v instanceof String) { return v; }
         }
         return "";
+    }
+
+    // ---- hexdb.io stale-route correction ----
+
+    function onHexRouteResponse(code as Number, data as Dictionary or String or Null) as Void {
+        _metaPending = false;
+        if (_hexKey == null) { return; }
+        var route = null;
+        if (code == 200 && data instanceof Dictionary && data["route"] instanceof String) {
+            route = data["route"] as String;
+        }
+        var eps = (route != null) ? hexEndpoints(route) : null;
+        if (eps == null) {
+            _hexKey = null;          // hexdb couldn't help; keep adsbdb's route
+        } else {
+            _hexOrigIcao = eps[0];
+            _hexDestIcao = eps[1];
+        }
+        WatchUi.requestUpdate();
+    }
+
+    function onHexOriginResponse(code as Number, data as Dictionary or String or Null) as Void {
+        _metaPending = false;
+        if (_hexKey == null) { return; }
+        _hexOrigAp = hexAirport(code, data, _hexOrigIcao);
+        finishHexIfReady();
+        WatchUi.requestUpdate();
+    }
+
+    function onHexDestResponse(code as Number, data as Dictionary or String or Null) as Void {
+        _metaPending = false;
+        if (_hexKey == null) { return; }
+        _hexDestAp = hexAirport(code, data, _hexDestIcao);
+        finishHexIfReady();
+        WatchUi.requestUpdate();
+    }
+
+    // Once both endpoints are resolved, reshape them into the adsbdb flightroute
+    // structure and overwrite the cached route, so the views render unchanged.
+    private function finishHexIfReady() as Void {
+        if (_hexKey == null || _hexOrigAp == null || _hexDestAp == null) { return; }
+        var fr = { "origin" => _hexOrigAp, "destination" => _hexDestAp };
+        _routeInfo.put(_hexKey, fr);
+        _route.put(_hexKey, buildRouteLabel(fr));
+        _routeCorrected.put(_hexKey, true);
+        _hexKey = null;
+        _hexOrigIcao = null;
+        _hexDestIcao = null;
+        _hexOrigAp = null;
+        _hexDestAp = null;
+    }
+
+    // "LKPR-EGPH" (or "A-B-C") -> [firstICAO, lastICAO]; null if unparseable.
+    private function hexEndpoints(route as String) as Array<String>? {
+        var chars = route.toCharArray();
+        var first = -1;
+        var last = -1;
+        for (var i = 0; i < chars.size(); i++) {
+            if (chars[i] == '-') {
+                if (first < 0) { first = i; }
+                last = i;
+            }
+        }
+        if (first < 0) { return null; }
+        var o = route.substring(0, first);
+        var d = route.substring(last + 1, route.length());
+        if (o == null || d == null || o.length() == 0 || d.length() == 0) {
+            return null;
+        }
+        return [o, d];
+    }
+
+    // Build an adsbdb-shaped airport dict from a hexdb airport response. Always
+    // returns a dict (falling back to the ICAO code) so From/To still shows.
+    private function hexAirport(code as Number, data as Dictionary or String or Null,
+                                icao as String?) as Dictionary {
+        var name = "";
+        var iata = "";
+        var region = "";
+        if (code == 200 && data instanceof Dictionary) {
+            if (data["airport"] instanceof String) { name = data["airport"] as String; }
+            if (data["iata"] instanceof String) { iata = data["iata"] as String; }
+            if (data["region_name"] instanceof String) { region = data["region_name"] as String; }
+        }
+        return {
+            "iata_code" => iata,
+            "icao_code" => (icao != null) ? icao : "",
+            "municipality" => "",
+            "name" => name,
+            "country_name" => region
+        };
     }
 
     // ---- helpers ----
