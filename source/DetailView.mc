@@ -5,7 +5,8 @@ import Toybox.Timer;
 import Toybox.WatchUi;
 
 // Scrollable detail page for one aircraft: full route, type, operator,
-// registration, altitude/speed/track. Start toggles a lock on this aircraft.
+// registration, altitude/speed/track. Start toggles a lock on this aircraft;
+// Menu opens a context menu (force the hexdb.io route re-check).
 class DetailView extends WatchUi.View {
 
     private var _model as PlaneModel;
@@ -24,10 +25,15 @@ class DetailView extends WatchUi.View {
     }
 
     function onShow() as Void {
+        startTimer();
+        onTick();
+    }
+
+    private function startTimer() as Void {
+        if (_timer != null) { return; }
         var t = new Timer.Timer();
         t.start(method(:onTick), 500, true);
         _timer = t;
-        onTick();
     }
 
     function onHide() as Void {
@@ -52,6 +58,16 @@ class DetailView extends WatchUi.View {
         _scroll += dy;
         if (_scroll > _maxScroll) { _scroll = _maxScroll; }
         if (_scroll < 0) { _scroll = 0; }
+        WatchUi.requestUpdate();
+    }
+
+    // Context-menu action: force the hexdb.io route lookup for this aircraft,
+    // bypassing the staleness heuristic, and restart the resolve timer so the
+    // lookup progresses and the page refreshes when the route lands.
+    function forceAltRoute() as Void {
+        if (_model.forceRouteCorrection(_plane)) {
+            startTimer();
+        }
         WatchUi.requestUpdate();
     }
 
@@ -161,6 +177,9 @@ class DetailView extends WatchUi.View {
         } else {
             b.add(["Route unknown", Graphics.FONT_XTINY, Graphics.COLOR_DK_GRAY]);
         }
+        if (_model.routeCorrectionPending(_plane.callsign)) {
+            b.add(["Checking hexdb.io...", Graphics.FONT_XTINY, Graphics.COLOR_DK_GRAY]);
+        }
         b.add(["", Graphics.FONT_XTINY, Graphics.COLOR_BLACK]);
 
         var ac = _model.aircraftInfo(_plane.icao24);
@@ -195,6 +214,10 @@ class DetailView extends WatchUi.View {
         var locked = (_model.targetPlane == _plane) ? "locked" : "not locked";
         b.add(["START: lock/unlock (" + locked + ")",
                Graphics.FONT_XTINY, Graphics.COLOR_DK_GRAY]);
+        if (_plane.callsign.length() > 0) {
+            b.add(["MENU: re-check route via hexdb.io",
+                   Graphics.FONT_XTINY, Graphics.COLOR_DK_GRAY]);
+        }
         b.add(["Swipe / buttons to scroll, BACK to close",
                Graphics.FONT_XTINY, Graphics.COLOR_DK_GRAY]);
         return b;
@@ -289,4 +312,39 @@ class DetailDelegate extends WatchUi.BehaviorDelegate {
     function onPreviousPage() as Boolean { _view.scrollBy(-160); return true; }
 
     function onSelect() as Boolean { _view.toggleTarget(); return true; }
+
+    // Menu button / touch-and-hold: context menu with per-aircraft actions.
+    function onMenu() as Boolean {
+        var menu = new WatchUi.Menu2({
+            :title => WatchUi.loadResource(Rez.Strings.MenuDetailTitle)
+        });
+        menu.addItem(new WatchUi.MenuItem(
+            WatchUi.loadResource(Rez.Strings.MenuForceRoute) as String,
+            WatchUi.loadResource(Rez.Strings.MenuForceRouteSub) as String,
+            :forceRoute, null));
+        WatchUi.pushView(menu, new DetailMenuDelegate(_view), WatchUi.SLIDE_UP);
+        return true;
+    }
+}
+
+class DetailMenuDelegate extends WatchUi.Menu2InputDelegate {
+
+    private var _view as DetailView;
+
+    function initialize(view as DetailView) {
+        Menu2InputDelegate.initialize();
+        _view = view;
+    }
+
+    function onSelect(item as WatchUi.MenuItem) as Void {
+        if (item.getId() == :forceRoute) {
+            _view.forceAltRoute();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        }
+    }
+
+    // Reverse of the slide-up it opened with.
+    function onBack() as Void {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
 }

@@ -329,6 +329,27 @@ class PlaneModel {
         return true;
     }
 
+    // True while the hexdb.io lookup for this callsign is in progress.
+    function routeCorrectionPending(callsign as String) as Boolean {
+        return _hexKey != null && _hexKey.equals(callsign);
+    }
+
+    // Manually start the hexdb.io route lookup for this aircraft, bypassing the
+    // staleness heuristic. The actual requests are issued by resolveStaleRoute
+    // as the resolve loop ticks. Returns true when the lookup is (now) running.
+    function forceRouteCorrection(f as Plane) as Boolean {
+        var cs = f.callsign;
+        if (cs.length() == 0) { return false; }
+        if (_hexKey != null) { return _hexKey.equals(cs); }
+        _routeStaleChecked.put(cs, true);   // don't re-run the automatic check
+        _hexKey = cs;
+        _hexOrigIcao = null;
+        _hexDestIcao = null;
+        _hexOrigAp = null;
+        _hexDestAp = null;
+        return true;
+    }
+
     function aircraftInfo(icao24 as String) as Dictionary? {
         var v = _typeInfo.get(icao24);
         return (v instanceof Dictionary) ? v : null;
@@ -379,6 +400,15 @@ class PlaneModel {
         if (cs.length() == 0) { return; }
         if (_hexKey != null) {
             if (!_hexKey.equals(cs)) { return; }   // busy correcting another flight
+            if (_hexOrigIcao == null && _hexDestIcao == null) {
+                // Lookup armed (manual trigger) but the route request hasn't
+                // been issued yet -> send it now.
+                _metaPending = true;
+                _lastMetaSec = now;
+                Communications.makeWebRequest(HEXDB_ROUTE_URL + cs, {},
+                                              metaOptions(), method(:onHexRouteResponse));
+                return;
+            }
             if (_hexOrigIcao != null && _hexOrigAp == null) {
                 _metaPending = true;
                 _lastMetaSec = now;

@@ -9,6 +9,10 @@
 
     <string id="MenuNearby">Aircraft nearby</string>
 
+    <string id="MenuDetailTitle">Aircraft</string>
+    <string id="MenuForceRoute">Re-check route</string>
+    <string id="MenuForceRouteSub">via hexdb.io</string>
+
     <string id="SetRadius">Search radius (m)</string>
     <string id="SetRefresh">Refresh interval (s)</string>
 </strings>
