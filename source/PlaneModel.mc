@@ -496,13 +496,21 @@ class PlaneModel {
 
     private function buildRouteLabel(fr as Dictionary) as String {
         var origin = airportField(fr["origin"], "iata_code");
+        var oIso = airportField(fr["origin"], "country_iso_name");
         var dest = fr["destination"];
         var dCode = airportField(dest, "iata_code");
+        var dIso = airportField(dest, "country_iso_name");
         var dCity = airportField(dest, "municipality");
         var label = "";
-        if (origin.length() > 0) { label = origin + " "; }
+        if (origin.length() > 0) {
+            if (oIso.length() > 0) { origin += "/" + oIso; }
+            label = origin + " ";
+        }
         label += "-> ";
-        if (dCode.length() > 0) { label += dCode; }
+        if (dCode.length() > 0) {
+            label += dCode;
+            if (dIso.length() > 0) { label += "/" + dIso; }
+        }
         if (dCity.length() > 0) { label += " " + dCity; }
         return label;
     }
@@ -592,17 +600,20 @@ class PlaneModel {
         var name = "";
         var iata = "";
         var region = "";
+        var cc = "";
         if (code == 200 && data instanceof Dictionary) {
             if (data["airport"] instanceof String) { name = data["airport"] as String; }
             if (data["iata"] instanceof String) { iata = data["iata"] as String; }
             if (data["region_name"] instanceof String) { region = data["region_name"] as String; }
+            if (data["country_code"] instanceof String) { cc = data["country_code"] as String; }
         }
         return {
             "iata_code" => iata,
             "icao_code" => (icao != null) ? icao : "",
             "municipality" => "",
             "name" => name,
-            "country_name" => region
+            "country_name" => region,
+            "country_iso_name" => cc
         };
     }
 

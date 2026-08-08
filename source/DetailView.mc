@@ -215,9 +215,13 @@ class DetailView extends WatchUi.View {
         var city = tagStr(ap, "municipality");
         var iata = tagStr(ap, "iata_code");
         var name = tagStr(ap, "name");
+        var iso = tagStr(ap, "country_iso_name");
         var s = (city.length() > 0) ? city : name;
         if (iata.length() > 0) {
             s = (s.length() > 0) ? (s + " (" + iata + ")") : iata;
+        }
+        if (iso.length() > 0 && s.length() > 0) {
+            s += ", " + iso;
         }
         return s;
     }
