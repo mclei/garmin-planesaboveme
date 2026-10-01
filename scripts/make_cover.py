@@ -2,7 +2,7 @@
 """Generate the Connect IQ Store cover image (500x500) for Planes Above Me.
 
 Same style as the cover of the sister app Ahead: a dark gradient, the app's
-compass ring, nearby aircraft as cyan triangles pointing along their ground
+compass ring, nearby aircraft as cyan airplane silhouettes heading along their ground
 track, and the green arrow pointing at the aircraft you are facing, with its
 contrail. Rendered at 4x and downsampled with LANCZOS. Pure Pillow, no network.
 
@@ -39,12 +39,17 @@ def polar(bearing_deg, dist):
     return (CX + dist * math.sin(th), CY - dist * math.cos(th))
 
 
-def triangle(d, x, y, ang, size, color):
-    """MainView.drawTriangle: arrowhead pointing at ang (0 = up, clockwise)."""
+# Airliner seen from above, nose up, in units of the half length (right half; mirrored)
+PLANE_HALF = [(0.0, -1.0), (0.07, -0.94), (0.10, -0.80), (0.10, -0.28), (0.98, 0.14), (0.98, 0.27),
+              (0.10, 0.06), (0.08, 0.62), (0.40, 0.84), (0.40, 0.95), (0.05, 0.88), (0.0, 0.92)]
+
+
+def airplane(d, x, y, ang, size, color):
+    """Airplane silhouette pointing at ang (0 = up, clockwise), half length size."""
+    pts = PLANE_HALF + [(-px, py) for px, py in reversed(PLANE_HALF[1:-1])]
     a = math.radians(ang)
     s, c = math.sin(a), math.cos(a)
-    pts = [(0.0, -size), (0.62 * size, 0.55 * size), (0.0, 0.22 * size), (-0.62 * size, 0.55 * size)]
-    d.polygon([(x + px * c - py * s, y + px * s + py * c) for px, py in pts], fill=color)
+    d.polygon([(x + (px * c - py * s) * size, y + (px * s + py * c) * size) for px, py in pts], fill=color)
 
 
 def font(path, weight, px):
@@ -93,7 +98,7 @@ def main():
         ImageDraw.Draw(gl).ellipse([x - 16 * SS, y - 16 * SS, x + 16 * SS, y + 16 * SS], fill=PLANE + (45,))
         img = Image.alpha_composite(img, gl)
         d = ImageDraw.Draw(img)
-        triangle(d, x, y, trk, 11 * SS, PLANE)
+        airplane(d, x, y, trk, 13 * SS, PLANE)
 
     # the aircraft you are facing: contrail, glow and the larger triangle
     fb, frac, trk = -30, 0.66, 62
@@ -117,7 +122,7 @@ def main():
         gld.ellipse([fx - rr, fy - rr, fx + rr, fy + rr], fill=GREEN + (int(70 * (i / 10) ** 2),))
     img = Image.alpha_composite(img, gl)
     d = ImageDraw.Draw(img)
-    triangle(d, fx, fy, trk, 17 * SS, (0xE0, 0xFF, 0xFF))
+    airplane(d, fx, fy, trk, 21 * SS, (0xE0, 0xFF, 0xFF))
 
     # green direction arrow from the centre toward it (as MainView's arrow)
     tb = math.radians(fb)
