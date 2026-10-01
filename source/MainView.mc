@@ -219,8 +219,20 @@ class MainView extends WatchUi.View {
             s += _model.planes.size().toString() + " aircraft";
         }
         var bottomMargin = h - (cy + ring);
-        var sy = (bottomMargin >= 20) ? (cy + ring + bottomMargin / 2)
-                                      : (cy + ring - 18);
+        var sy = cy + ring + bottomMargin / 2;
+        if (bottomMargin < 20) {
+            // No room below the ring (round screens): draw it inside, below the
+            // diagonal cardinal labels, trimmed to the circle's chord there.
+            sy = cy + (ring * 0.82).toNumber();
+            var r = ((w < h) ? w : h) / 2;
+            var dy = sy - cy + dc.getFontHeight(Graphics.FONT_XTINY) / 2;
+            var chord = (dy < r) ? (2.0 * Math.sqrt(r * r - dy * dy)).toNumber() - 12 : 0;
+            var word = s.find(" aircraft");
+            if (word != null && dc.getTextWidthInPixels(s, Graphics.FONT_XTINY) > chord) {
+                s = s.substring(0, word);   // "225 SW | 7"
+            }
+            s = fitText(dc, s, Graphics.FONT_XTINY, chord);
+        }
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, sy, Graphics.FONT_XTINY, s,
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);

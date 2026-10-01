@@ -41,6 +41,7 @@ not rotated to your facing direction.
 |------|--------|-------|
 | Aircraft positions | [OpenSky Network](https://opensky-network.org) | Anonymous access; positions, altitude, speed, ground track and callsign. Daily request budget applies — default refresh is 30 s. |
 | Type & route | [adsbdb.com](https://www.adsbdb.com) | Free, keyless. Resolves the **focused** aircraft's type (by Mode-S address) and route (by callsign) on demand and caches it, so request volume stays low. |
+| Route check | [hexdb.io](https://hexdb.io) | Free, keyless. Fallback when the adsbdb route looks stale (aircraft far off the origin→destination corridor), and on demand from the detail page menu. |
 
 Requests go through the **paired phone** (Garmin Connect Mobile must be running
 with internet). Without it you'll see an error on the status line.
@@ -79,10 +80,18 @@ The launcher icon can be regenerated with `python3 scripts/make_icon.py`.
 
 ## CI
 
-`.github/workflows/build.yml` builds on every push/PR and uploads
-`Planes.prg` as an artifact. Set a repository secret `CIQ_DEVELOPER_KEY`
-(base64 of your `developer_key.der`) so every build is signed with the same
-key — otherwise each rebuild is a fresh app and on-watch settings reset.
+`.github/workflows/build.yml` builds on every push/PR and uploads the
+`.prg` files as an artifact; on `v*` tags it also exports the store package
+`PlanesAboveMe.iq`. Set a repository secret `CIQ_DEVELOPER_KEY` (base64 of your
+`developer_key.der`) so every build is signed with the same key — otherwise
+each rebuild is a fresh app and on-watch settings reset. Tag (release) builds
+fail without the secret.
+
+## Store
+
+Listing texts, privacy and credits: `store/STORE.md`. Cover and screenshots:
+`python3 scripts/make_cover.py --font Quicksand.ttf` and
+`python3 scripts/make_screenshot.py --font Roboto.ttf`.
 
 ## Sister app
 
