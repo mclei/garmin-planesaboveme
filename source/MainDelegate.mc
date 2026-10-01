@@ -4,6 +4,7 @@ import Toybox.WatchUi;
 // Input mapping for the compass screen.
 //   Tap, or Start/Enter button .. detail page of the aircraft you're facing
 //   Swipe up .................... list of nearby aircraft
+//   Swipe in from right edge .... menu (also Menu button / long press)
 //   Back ........................ exit
 class MainDelegate extends WatchUi.BehaviorDelegate {
 
@@ -35,6 +36,16 @@ class MainDelegate extends WatchUi.BehaviorDelegate {
             PlanesUi.pushList(_model);
             return true;
         }
+        if (evt.getDirection() == WatchUi.SWIPE_LEFT) {
+            // finger drags in from the right edge toward the left -> menu
+            PlanesUi.pushMainMenu(_model);
+            return true;
+        }
         return false;
+    }
+
+    function onMenu() as Boolean {
+        PlanesUi.pushMainMenu(_model);
+        return true;
     }
 }

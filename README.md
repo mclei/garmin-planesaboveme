@@ -52,6 +52,7 @@ with internet). Without it you'll see an error on the status line.
 |-------|--------|
 | Tap the screen, or the **Start/Enter button** | Detail page of the aircraft you're facing |
 | Swipe up | Nearby-aircraft list (select one for its detail page) |
+| Swipe in from the right edge, Menu button or long press | Menu: aircraft nearby, refresh now, search radius, refresh interval, About (version, author, data credits) |
 | On the detail page: **Start** | Lock / unlock the aircraft; swipe or buttons to scroll; Back to close |
 | On the detail page: **Menu** (menu button or touch-and-hold) | Context menu: re-check the route via hexdb.io, bypassing the automatic staleness check |
 | Back | Exit |

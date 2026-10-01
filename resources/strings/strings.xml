@@ -13,6 +13,15 @@
     <string id="MenuForceRoute">Re-check route</string>
     <string id="MenuForceRouteSub">via hexdb.io</string>
 
+    <string id="MenuTitle">Planes Above Me</string>
+    <string id="MenuRefresh">Refresh now</string>
+    <string id="MenuRadius">Search radius</string>
+    <string id="MenuInterval">Refresh interval</string>
+    <string id="MenuAbout">About</string>
+    <string id="AboutVersion">Version</string>
+    <string id="AboutCredit1">Data: OpenSky Network,</string>
+    <string id="AboutCredit2">adsbdb.com, hexdb.io</string>
+
     <string id="SetRadius">Search radius (m)</string>
     <string id="SetRefresh">Refresh interval (s)</string>
 </strings>

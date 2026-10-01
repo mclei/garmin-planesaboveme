@@ -131,6 +131,23 @@ class PlaneModel {
         if (refreshSec < 15) { refreshSec = 15; }
     }
 
+    // Settings changed on the watch (menu): store like the phone settings do.
+    function setNumProp(key as String, v as Number) as Void {
+        try {
+            Application.Properties.setValue(key, v);
+        } catch (e) {
+            // not available on this device/firmware - keep the in-memory value
+        }
+        reloadSettings();
+        if (key.equals("radiusMeters")) { radiusM = v; }
+        if (key.equals("refreshSec")) { refreshSec = v; }
+    }
+
+    // Fetch positions on the next tick (menu "Refresh now").
+    function refreshNow() as Void {
+        _lastAirSec = 0;
+    }
+
     private function getNumProp(key as String, def as Number) as Number {
         var v = null;
         try {

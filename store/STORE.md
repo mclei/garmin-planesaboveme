@@ -37,8 +37,8 @@ WHAT YOU SEE
 • A list of all aircraft nearby, nearest first.
 
 SETTINGS
-Search radius (1–20 km, default 10 km) and refresh interval (15–120 s, default 30 s), in the
-Connect IQ settings on your phone.
+Search radius (default 10 km) and refresh interval (default 30 s), in the menu on the watch
+(swipe in from the right edge) or in the Connect IQ settings on your phone.
 
 REQUIREMENTS
 • A Garmin watch with GPS. "What you're facing" needs a compass (magnetometer).
@@ -51,7 +51,8 @@ REQUIREMENTS
 2. Point the watch at the aircraft you see. The one in front of you is shown large.
 3. Tap the screen (or press Start) for the detail page. Start on the detail page locks the
    aircraft, so the arrow follows it.
-4. Swipe up for the list of all aircraft nearby.
+4. Swipe up for the list of all aircraft nearby. Swipe in from the right edge for the menu
+   (refresh, search radius, refresh interval, About).
 
 ## What's new
 
