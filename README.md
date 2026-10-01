@@ -81,8 +81,10 @@ The launcher icon can be regenerated with `python3 scripts/make_icon.py`.
 
 ## CI
 
-`.github/workflows/build.yml` builds on every push/PR and uploads the
-`.prg` files as an artifact; on `v*` tags it also exports the store package
+`.github/workflows/build.yml` builds on every push/PR for Venu X1, Venu Sq 2
+and fenix 7 and uploads the `.prg` files as an artifact; on `v*` tags it also
+builds release `.prg` files for every device in the manifest (artifact
+`PlanesAboveMe-release-prg`) and exports the store package
 `PlanesAboveMe.iq`. Set a repository secret `CIQ_DEVELOPER_KEY` (base64 of your
 `developer_key.der`) so every build is signed with the same key — otherwise
 each rebuild is a fresh app and on-watch settings reset. Tag (release) builds
