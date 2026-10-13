@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planes Above Me · LEI soft</title>
+  <meta name="description" content="Planes Above Me for Garmin watches: point your wrist at an aircraft and see where it is flying.">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 1rem; align-items: center; }
+    .shots img { width: 100%; height: auto; }
+    .list { list-style: disc; padding-left: 1.25rem; }
+    .list li { margin: .25rem 0; }
+    ol { padding-left: 1.25rem; }
+    dt { margin-top: 1rem; font-weight: 600; }
+    dd { margin: .25rem 0 0; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <p><a href="/">← LEI soft</a></p>
+
+  <header>
+    <h1>Planes Above Me</h1>
+    <p class="lead">What plane is that? Point your wrist at an aircraft and see where it is flying.</p>
+  </header>
+
+  <main>
+    <p>Planes Above Me shows the live air traffic around you on a compass. For the aircraft you
+      are facing, it shows its destination, aircraft type, altitude, speed and operator.</p>
+    <p>It finds anything that broadcasts ADS-B: airliners, small airplanes, helicopters, business
+      jets, cargo and military flights.</p>
+
+    <section>
+      <h2>Screenshots</h2>
+      <div class="shots">
+        <img src="img/screenshot_round.png" width="612" height="624" alt="Compass radar with nearby aircraft and the aircraft in front of you on a round watch">
+        <img src="img/screenshot_venux1.png" width="448" height="486" alt="The same view on Venu X1">
+      </div>
+    </section>
+
+    <section>
+      <h2>What you see</h2>
+      <ul class="list">
+        <li>A compass radar with every aircraft within range, drawn as a triangle pointing along
+          its course, in all directions.</li>
+        <li>The aircraft in front of you, large: callsign, route (for example "WAW/PL -&gt; LHR/GB
+          London"), altitude, type and operator, speed and distance. An arrow shows where to look
+          and turns green when you face it.</li>
+        <li>A detail page with origin and destination airports, manufacturer and type, operator,
+          registration, country, altitude, speed and course.</li>
+        <li>Lock: follow one aircraft across the sky; the arrow keeps pointing at it as you
+          turn.</li>
+        <li>A list of all aircraft nearby, nearest first.</li>
+      </ul>
+      <p>Search radius (default 10 km) and refresh interval (default 30 s) can be set in the menu
+        on the watch or in the Connect IQ settings on your phone.</p>
+    </section>
+
+    <section>
+      <h2>How to use</h2>
+      <ol>
+        <li>Start Planes Above Me outdoors and wait for GPS.</li>
+        <li>Point the watch at the aircraft you see. The one in front of you is shown large.</li>
+        <li>Tap the screen (or press Start) for the detail page. Start on the detail page locks
+          the aircraft, so the arrow follows it.</li>
+        <li>Swipe up for the list of all aircraft nearby. Swipe in from the right edge for the
+          menu (refresh, search radius, refresh interval, About).</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Requirements</h2>
+      <ul class="list">
+        <li>A Garmin watch with GPS. "What you're facing" needs a compass (magnetometer).</li>
+        <li>A paired phone with Garmin Connect and an internet connection. Live flight data comes
+          from the internet.</li>
+      </ul>
+      <p>Supported watches: Venu X1, Venu 2/2 Plus/2S/3/3S, Venu Sq 2, vívoactive 5,
+        fēnix 7/7S/7X, epix (Gen 2), Forerunner 255/265/265S/955/965.</p>
+    </section>
+
+    <section>
+      <h2>FAQ</h2>
+      <dl>
+        <dt>It shows an error on the status line.</dt>
+        <dd>The app needs a connection to your phone with Garmin Connect running and internet
+          access.</dd>
+
+        <dt>An aircraft I can see is not shown.</dt>
+        <dd>Only aircraft that broadcast ADS-B and are received by the OpenSky Network appear.
+          Some small or military aircraft do not broadcast, and positions can be a few seconds
+          old.</dd>
+
+        <dt>The route is wrong.</dt>
+        <dd>Routes are looked up by callsign and can be out of date. On the detail page open the
+          menu and choose "Re-check route" to look it up again from a second source.</dd>
+
+        <dt>The arrow points the wrong way.</dt>
+        <dd>Calibrate the compass in the watch settings (Sensors → Compass), away from metal.</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>Support the app</h2>
+      <p>Planes Above Me is free and has no ads. If you enjoy it, you can support its development
+        with a donation.</p>
+      <p><a class="button" href="https://paypal.me/mclei">Donate with PayPal</a></p>
+    </section>
+
+    <section>
+      <h2>Contact</h2>
+      <p>Questions and bug reports: <a href="mailto:garmin.dev@leisoft.cz">garmin.dev@leisoft.cz</a></p>
+      <p><a href="privacy.html">Privacy policy</a></p>
+    </section>
+
+    <section>
+      <h2>Credits</h2>
+      <p>Live aircraft positions: <a href="https://opensky-network.org">The OpenSky Network</a>.
+        Aircraft and route data: <a href="https://www.adsbdb.com">adsbdb.com</a> and
+        <a href="https://hexdb.io">hexdb.io</a>.</p>
+    </section>
+  </main>
+
+  <footer>© LEI soft · <a href="mailto:garmin.dev@leisoft.cz">garmin.dev@leisoft.cz</a></footer>
+</body>
+</html>

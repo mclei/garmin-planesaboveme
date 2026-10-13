@@ -111,5 +111,5 @@ use). Aircraft and route data: adsbdb.com and hexdb.io.
   fail without the `CIQ_DEVELOPER_KEY` secret, so every release is signed with the same key.
 - Anonymous OpenSky access has a daily request budget per IP address (the phone's), so each
   user has their own budget; the default refresh of 30 s stays well within it.
-- Support contact: garmin.dev@leisoft.cz
-- Privacy policy URL (if the store asks for one): […]
+- Support contact: garmin.dev@leisoft.cz, support page https://leisoft.cz/garmin/planes-above-me/
+- Privacy policy URL (if the store asks for one): https://leisoft.cz/garmin/planes-above-me/privacy.html
